@@ -97,16 +97,16 @@
                 data: {
                     send: {
                         message: null
-                    },
-                    submitData: null
+                    }
                 },
                 methods: {
                     performSend: function() {
-                        this.submitData = this.send;
-                        axios.post('/send', {
+                        var request = axios.post('/send', {
                             message: this.send.message
+                        }).then(function (response) {
+                            response => this.data = response.data
                         });
-                        this.send.message = "";     
+                        request.then(key => this.send.message = "");
                     }
                 }
             });
