@@ -4,7 +4,6 @@
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="csrf-token" content="{{ csrf_token() }}" />
 
         <title>Laravel</title>
 
@@ -12,7 +11,7 @@
         <link href="https://fonts.googleapis.com/css?family=Raleway:100,600" rel="stylesheet" type="text/css">
 
         <!-- Bootstrap -->
-        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" type="text/css">        
+        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" type="text/css">
 
         <!-- Styles -->
         <style>
@@ -73,6 +72,7 @@
         </style>
     </head>
     <body>
+        
         <div class="flex-center position-ref full-height">
             <div class="content">
                 <div class="title m-b-md">
@@ -80,30 +80,36 @@
                 </div>
                 <div class="row">
                     <div class="col-lg-12">
-                        <form action="#" id="send">
-                            <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                            <textarea name="message" id="message" cols="30" rows="10" class="form-control"></textarea><br>
-                            <input type="submit" value="Send" class="btn btn-primary">                       
+                        <form v-on:submit.prevent="performSend" id="form">
+                            <textarea name="message" id="message" v-model="send.message" cols="30" rows="10" class="form-control"></textarea><br>
+                            <input type="submit" value="Send" class="btn btn-primary">
                         </form>
                     </div>                    
                 </div>
             </div>
-        </div>
+        </div>        
 
-        <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
-        <script type="text/javascript">
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/1.0.28/vue.js"></script>
+        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+        <script>
+            new Vue({
+                el: '#form',
+                data: {
+                    send: {
+                        message: null
+                    },
+                    submitData: null
+                },
+                methods: {
+                    performSend: function() {
+                        this.submitData = this.send;
+                        axios.post('/send', {
+                            message: this.send.message
+                        });
+                        this.send.message = "";     
+                    }
                 }
             });
-
-            $(document).ready(function(){
-                $('#send').submit(function(){
-                    var message = $('#message').val();
-                    $.post('send', {message:message});
-                });            
-            });
-        </script>        
+        </script>
     </body>
 </html>

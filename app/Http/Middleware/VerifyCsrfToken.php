@@ -13,7 +13,9 @@ class VerifyCsrfToken extends BaseVerifier
      */
     protected $except = [
     	'botman',
-        'botman/*'
+        'botman/*',
+        'message',
+        'send'
     ];
 
 	/**

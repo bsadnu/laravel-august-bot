@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Subscriber;
 use Mpociot\BotMan\BotMan;
+use App\Jobs\SendTelegramMessage;
+use Carbon\Carbon;
 
 class MessagesController extends Controller
 {
@@ -25,12 +27,11 @@ class MessagesController extends Controller
      */
     public function send(Request $request)
     {
-    	$botman = app('botman');
-        $botman->verifyServices(env('TOKEN_VERIFY'));
-
         $subscribers = Subscriber::all();
+
         foreach ($subscribers as $subscriber) {
-        	$botman->say($request->input('message'), $subscriber->telegram_id);
+	    	$job = (new SendTelegramMessage($subscriber, $request->input('message')));
+	        dispatch($job);
         }
     }    
 }
