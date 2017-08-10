@@ -5,6 +5,8 @@ namespace App\Commands;
 use Mpociot\BotMan\BotMan;
 use App\Subscriber;
 use Carbon\Carbon;
+use Spatie\SslCertificate\SslCertificate;
+use Spatie\SslCertificate\Exceptions\CouldNotDownloadCertificate;
 
 /**
 * August bot commands class.
@@ -20,23 +22,15 @@ class AugustCommands
      */    
     public function handleSSLInfo(BotMan $bot, $domain)
     {
-        if ($this->isDomainAvailable($domain) && $this->hasSSL($domain)) {
-            $ssl = $this->getSSL($domain);
-
-            $bot->reply('Issuer: ' . $ssl['issuer']['CN']);
-            $validTo = Carbon::createFromTimestamp($ssl['validTo_time_t']);
-            $now = Carbon::now();
-            if ($validTo < $now) {
-                $bot->reply('Is Valid: False');
-                $bot->reply('Expiration date has passed');
-            } else {
-                $bot->reply('Is Valid: True');
-                $daysLeft = $validTo->diffInDays($now);
-                $bot->reply('Expired In: ' . $daysLeft);
-            }
-        } else {
+        try {
+            $ssl = SslCertificate::createForHostName($domain);
+        } catch (CouldNotDownloadCertificate $e) {
             $bot->reply('Error! Check domain again.');
         }
+
+        $bot->reply('Issuer: ' . $ssl->getIssuer());
+        $bot->reply('Expired In: ' . $ssl->expirationDate()->diffInDays());
+        $bot->reply('Is Valid: ' . $ssl->isValid() ? 'True' : 'False');      
     }
 
     /**
@@ -80,46 +74,4 @@ class AugustCommands
             $bot->reply('Failed! You haven\'t subscribed yet.');
         }
     }        
-
-    /**
-     * Check if domain is available.
-     *
-     * @param string $domain
-     * @return bool
-     */
-    protected function isDomainAvailable($domain)
-    {
-        return gethostbyname($domain) != $domain ? true : false;
-    }
-
-    /**
-     * Fetch SSL data.
-     *
-     * @param string $domain
-     * @return array
-     */
-    protected function getSSL($domain) {
-        $stream = stream_context_create([
-            "ssl" => ["capture_peer_cert" => true]
-        ]);
-        $read = stream_socket_client("ssl://{$domain}:443", $errno, $errstr, 30, STREAM_CLIENT_CONNECT, $stream);
-        $context = stream_context_get_params($read);
-        return openssl_x509_parse($context["options"]["ssl"]["peer_certificate"]);
-    }
-
-    /**
-     * Check if domain has SSL.
-     *
-     * @param string $domain
-     * @return array
-     */
-    protected function hasSSL($domain) {
-        $read = @fsockopen("ssl://{$domain}", 443, $errno, $errstr, 30);
-        if (!$read) {
-            return false;
-        } else {
-            return true;
-            fclose($read);
-        }
-    }           
 }
