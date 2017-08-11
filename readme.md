@@ -7,4 +7,4 @@
 - подписка на сообщения: subscribe
 - отписка от сообщений: unsubscribe
 
-Форма сообщений всем подписчикам: bot.natalia-bannikova.ru/messages
+Форма сообщений всем подписчикам по ссылке: /messages
